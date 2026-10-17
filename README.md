@@ -85,59 +85,9 @@ CPUは初心者の練習用です。駒の価値と相手の次の応手を中�
 
 通常のブラウザで `index.html` を開くと、説明用のテスト表示になります。この表示では別タブや他端末との対戦はできません。
 
-## 開発用ファイル
-
-`work/` に、再編集・ビルド・テスト用のファイルを保存しています。
-
-| ファイル | 役割 |
-| --- | --- |
-| `engine.js` | 将棋のルール、局面判定、CPU |
-| `sync.js` | オンラインイベントの処理と局面復元 |
-| `ui.html` | 画面と操作、webxdc APIとの接続 |
-| `build.py` | ロジックをHTMLに埋め込み、アイコンと `.xdc` を生成 |
-| `test.cjs` | ルールと同期処理のテスト |
-| `screens.cjs` | ブラウザ操作テストと説明用画面の撮影 |
-| `manual.py` | HTML・DOCXマニュアルの生成 |
-| `print.cjs` | HTMLマニュアルからPDFを生成 |
-
-### ビルドとテスト
-
-以下は、このフォルダをカレントディレクトリとして実行するコマンドです。`python` と `node` は使用環境にインストールした実行ファイルを指定してください。
-
-```powershell
-python work/build.py
-node work/test.cjs
-node work/screens.cjs
-python work/manual.py
-node work/print.cjs
-```
-
-アプリ本体の実行にPythonやNode.jsは不要です。開発時はPythonのPillow・python-docxと、Node.jsのPlaywrightを使用します。PDF生成にはChromeを使用します。
-
-現在のスクリプトは作成環境のWindows向けです。`build.py`・`manual.py` はWindowsの游ゴシックのパス、`screens.cjs`・`print.cjs` は作成環境のPlaywrightとChromeの絶対パスを参照しています。別の環境では各パスを変更してください。`outputs/shogi-1.0.0/` がない場合は、ビルド前に作成してください。
-
-`screens.cjs` は説明用の画像を生成し、`manual.py` がそれらを読み込みます。マニュアルを作り直す場合は上記の順番で実行します。PDFはHTMLから生成し、DOCXからの変換ではありません。
-
-## 確認済みの範囲と制限
-
-作成時に、以下を確認しています。詳細は `outputs/確認結果.txt` を参照してください。
-
-- ルールと同期処理の17項目群のテスト成功。
-- 初期局面の合法手を深さ1〜3で列挙し、30・900・25470手を確認。
-- 120手の合法手連続適用と、盤上・持ち駒を合わせた40枚の保存。
-- ChromeでCPUの応手、成り、募集・参加・投了・再戦を操作。
-- 幅320pxで横方向のはみ出しがないことを確認。
-- 独立したブラウザ画面間の模擬配送で同期し、別画面での履歴復元・観戦を確認。
-- `.xdc` のZIP整合性と、展開ソースとの一致を確認。
-- PDFの全7ページを画像化して目視確認。
-
-**Delta Chat実機間の通信は未確認です。** 模擬APIによるテストは、実機の配送・復元確認を代替しません。
-
-DOCXは内容・表・埋め込み画像を検査しています。ただし作成環境にWord・LibreOfficeがなく、DOCXの最終改ページと表示は未確認です。
-
 ## 参考とライセンス
 
-画面構成と使い方は、既存の五目並べ1.0.0およびリバーシ1.1.3を参考にしています。将棋は別の作業フォルダで新規実装しました。
+画面構成と使い方は、将棋は別の作業フォルダで新規実装しました。
 
 - [Webxdc Get Started](https://webxdc.org/docs/get_started.html)
 - [Webxdc API](https://webxdc.org/docs/spec/api.html)
