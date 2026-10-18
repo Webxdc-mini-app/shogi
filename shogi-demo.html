@@ -1,0 +1,127 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>将棋</title><style>
+*{box-sizing:border-box}body{margin:0;background:#f5f1e8;color:#292b27;font-family:'Yu Gothic',Meiryo,sans-serif;font-size:15px}main{max-width:520px;margin:auto;padding:16px 12px}h1{font-size:26px;margin:6px 0}h2{font-size:19px}p{line-height:1.7}button{font:inherit;border:1px solid #d4d1c6;border-radius:10px;background:white;color:#292b27;padding:12px 15px;cursor:pointer;min-height:44px}button:disabled{opacity:.5;cursor:default}button.primary{background:#295d4c;color:white;border-color:#295d4c}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.menu button{display:block;width:100%;margin:12px 0;padding:18px}.sub{color:#62665e;font-size:12px;line-height:1.7;white-space:pre-line}.card{background:white;border:1px solid #e0daca;border-radius:15px;padding:18px;margin:16px 0}.board{display:grid;grid-template-columns:repeat(9,1fr);border:2px solid #7b5932;background:#dfb97e;aspect-ratio:1;margin:8px 0}.cell{position:relative;display:flex;align-items:center;justify-content:center;border-radius:0;min-height:0;padding:0;border:0;border-right:1px solid #997340;border-bottom:1px solid #997340;background:transparent;aspect-ratio:1;font-family:'Yu Mincho',serif;font-size:clamp(19px,5.9vw,31px);font-weight:bold;color:#251e13}.cell:disabled{opacity:1}.piece{display:inline-flex;align-items:center;justify-content:center;width:88%;height:88%;background:#f5d79f;clip-path:polygon(50% 0,88% 18%,100% 100%,0 100%,12% 18%);font-size:inherit}.piece.small{font-size:.55em}.piece.promoted{color:#ab2b22}.piece.enemy{transform:rotate(180deg)}.cell.last{background:#eacb6c}.cell.sel{background:#5f9e90}.cell.dest{box-shadow:inset 0 0 0 4px #397865;background:#e0e8b8}.cell.dest:after{content:'';position:absolute;width:9px;height:9px;border-radius:50%;background:#295d4c;bottom:2px;right:2px}.hand{display:flex;flex-wrap:wrap;gap:5px;min-height:40px}.hand button{padding:7px 10px;font-weight:bold}.hand .sel{background:#d6ebdf;border:2px solid #295d4c}.label{font-size:13px;font-weight:bold;margin:8px 0 5px}.status{background:#e1ebe3;border-radius:10px;padding:12px;line-height:1.6;font-weight:bold;min-height:48px}.coords{display:flex;justify-content:space-around;font-size:11px;color:#78684f}dialog{max-width:330px;width:90%;border:0;border-radius:16px;padding:24px;box-shadow:0 8px 45px #0004}dialog::backdrop{background:#0006}details{margin:18px 0;font-size:13px;line-height:1.8}summary{cursor:pointer}#notice{color:#a33a25}header{display:flex;justify-content:space-between;align-items:center;gap:8px}header button{font-size:12px;padding:8px}#log{max-height:130px;overflow:auto;font-size:12px;line-height:1.8}button:focus-visible{outline:3px solid #1788c0;outline-offset:1px}@media(max-width:360px){main{padding:10px 7px}.hand button{padding:6px 8px}}
+</style><script src="webxdc.js"></script></head><body><main><header><h1>将棋 <span style="font-size:13px;color:#6a6d62" id="mode"></span></h1><button id="back" hidden>メニューに戻る</button></header><div id="notice" class="sub"></div>
+<div id="menu" class="menu"><div class="card"><h2>ひとりでも、チャット相手とも</h2><p>駒を選んで、緑の印のマスへ。<br>持ち駒もタップして盤上に打てます。</p><button class="primary" id="cpu1">CPU対戦（あなたが先手）</button><button id="cpu2">CPU対戦（あなたが後手）</button><button class="primary" id="online">チャット相手と対戦</button></div><p class="sub">先手が最初に指します。CPUは練習用です。<br>オンラインは同じチャットの同じアプリ投稿を開きます。</p></div>
+<div id="game" hidden><div class="status" id="status" role="status" aria-live="polite"></div><div id="topLabel" class="label"></div><div id="topHand" class="hand"></div><div id="coords" class="coords"></div><div id="board" class="board" role="group" aria-label="将棋盤 9×9"></div><div id="bottomLabel" class="label"></div><div id="bottomHand" class="hand"></div><p id="hint" class="sub">自分の駒を選ぶ → 緑の印のマスを押す。選択をやめるには同じ駒をもう一度押します。</p><div class="actions" id="actions"></div><div id="rx" class="sub"></div><details><summary>棋譜を見る</summary><div id="log"></div></details></div>
+<details><summary>遊び方と採用ルール</summary><p>自分の番に駒を選び、緑の印のマスを押して指します。持ち駒を選べば空きマスに打てます。敵陣の3段に入る・出る・中で動くとき、成れる駒には「成る」「成らない」を表示します。行き所がなくなる歩・香・桂は自動で成ります。</p><p>王手は必ず防ぎます。詰みは自動で終局します。二歩、行き所のない駒打ち、打ち歩詰め、自玉を王手にさらす手は選べません。成駒を取ると元の駒が持ち駒になります。</p><p>盤面・持ち駒・手番が同じ局面が4回現れると千日手で引き分け。連続王手による千日手は王手を続けた側の負けです。王手でない合法手なしは引き分けとします。持将棋の点数・入玉宣言・500手の自動判定はありません。「引き分けを提案」を双方が同じ局面で押すと合意引き分けになります。CPU戦はこのボタンで即引き分けです。持ち時間・待ったはありません。</p><p>オンラインは履歴から復元します。CPU戦は閉じると失われます。メニューに戻るだけではオンライン対局は終わりません。再戦は参加者のどちらか1人が押すと先後を交代して直ちに始まります。1つの投稿で同時に1対局。第三者は観戦できます。</p><p>更新の競合は論理時刻・送信者ID・イベントIDの順で履歴を再計算します。一時的に表示が変わることがあります。送受信を待ってから指してください。送信者IDは更新データ内の自己申告で、改造クライアントによるなりすましを防ぐ認証機能はありません。信頼できる相手との利用を想定します。</p><p class="sub">将棋 1.0.0 ／ 外部通信・外部ライブラリ不要</p></details></main>
+<dialog id="promotion"><h2>この駒を成りますか</h2><p>成ると動きが変わります。</p><div class="actions"><button class="primary" id="yes">成る</button><button id="no">成らない</button><button id="cancelPromotion">選び直す</button></div></dialog><script>
+'use strict';
+const Shogi = (() => {
+ const types=['P','L','N','S','G','B','R'], names={P:'歩',L:'香',N:'桂',S:'銀',G:'金',B:'角',R:'飛',K:'玉','+P':'と','+L':'成香','+N':'成桂','+S':'成銀','+B':'馬','+R':'龍'};
+ const clone=s=>JSON.parse(JSON.stringify(s)), inside=(r,c)=>r>=0&&r<9&&c>=0&&c<9, base=t=>t.replace('+','');
+ function key(s){return JSON.stringify([s.b,s.h,s.turn]);}
+ function initial(){let s={b:Array.from({length:9},()=>Array(9).fill(null)),h:[null,Object.fromEntries(types.map(t=>[t,0])),Object.fromEntries(types.map(t=>[t,0]))],turn:1,ply:0,over:false,result:'',last:null,history:[]};
+ ['L','N','S','G','K','G','S','N','L'].forEach((t,c)=>{s.b[0][c]={t,p:2};s.b[8][c]={t,p:1};});
+ for(let c=0;c<9;c++){s.b[2][c]={t:'P',p:2};s.b[6][c]={t:'P',p:1};}
+ s.b[1][1]={t:'R',p:2};s.b[1][7]={t:'B',p:2};s.b[7][1]={t:'B',p:1};s.b[7][7]={t:'R',p:1};s.history=[{key:key(s),mover:0,check:false}];return s;}
+ function targets(s,r,c){const q=s.b[r][c];if(!q)return [];const f=q.p===1?-1:1,t=q.t,out=[];
+ const step=(dr,dc)=>{let y=r+dr*f,x=c+dc;if(inside(y,x)&&s.b[y][x]?.p!==q.p)out.push([y,x]);};
+ const ray=(dr,dc)=>{let y=r+dr*f,x=c+dc;while(inside(y,x)){if(s.b[y][x]?.p===q.p)break;out.push([y,x]);if(s.b[y][x])break;y+=dr*f;x+=dc;}};
+ if(t==='K'){for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++)if(dr||dc)step(dr,dc);}
+ else if(t==='G'||['+P','+L','+N','+S'].includes(t))[[1,-1],[1,0],[1,1],[0,-1],[0,1],[-1,0]].forEach(d=>step(...d));
+ else if(t==='P')step(1,0);
+ else if(t==='L')ray(1,0);
+ else if(t==='N'){step(2,-1);step(2,1);}
+ else if(t==='S')[[1,-1],[1,0],[1,1],[-1,-1],[-1,1]].forEach(d=>step(...d));
+ else if(t==='B'||t==='+B'){[[1,1],[1,-1],[-1,1],[-1,-1]].forEach(d=>ray(...d));if(t==='+B')[[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>step(...d));}
+ else if(t==='R'||t==='+R'){[[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>ray(...d));if(t==='+R')[[1,1],[1,-1],[-1,1],[-1,-1]].forEach(d=>step(...d));}
+ return out;}
+ function check(s,p){let k;for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(s.b[r][c]?.p===p&&s.b[r][c].t==='K')k=[r,c];if(!k)return true;
+ for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(s.b[r][c]?.p===3-p&&targets(s,r,c).some(d=>d[0]===k[0]&&d[1]===k[1]))return true;return false;}
+ const zone=(r,p)=>p===1?r<=2:r>=6;
+ const dead=(t,r,p)=>['P','L'].includes(t)?r===(p===1?0:8):t==='N'?(p===1?r<=1:r>=7):false;
+ function raw(s,m){let n={...s,b:s.b.map(row=>row.map(q=>q?{...q}:null)),h:[null,{...s.h[1]},{...s.h[2]}]};let p=s.turn;
+ if(m.drop){n.h[p][m.drop]--;n.b[m.r][m.c]={t:m.drop,p};}else{let q=n.b[m.fr][m.fc],cap=n.b[m.r][m.c];if(cap)n.h[p][base(cap.t)]++;n.b[m.fr][m.fc]=null;n.b[m.r][m.c]={t:m.promote?'+'+q.t:q.t,p};}
+ n.turn=3-p;n.ply=s.ply+1;n.last={...m};return n;}
+ function* candidates(s){const p=s.turn;
+ for(let r=0;r<9;r++)for(let c=0;c<9;c++){let q=s.b[r][c];if(q?.p!==p)continue;
+ for(const [y,x] of targets(s,r,c)){if(s.b[y][x]?.t==='K')continue;const can=!q.t.startsWith('+')&&['P','L','N','S','B','R'].includes(q.t)&&(zone(r,p)||zone(y,p));
+ if(!dead(q.t,y,p))yield {fr:r,fc:c,r:y,c:x,promote:false};if(can)yield {fr:r,fc:c,r:y,c:x,promote:true};}}
+ for(const t of types){if(!s.h[p][t])continue;for(let c=0;c<9;c++){if(t==='P'&&s.b.some(row=>row[c]?.p===p&&row[c].t==='P'))continue;
+ for(let r=0;r<9;r++)if(!s.b[r][c]&&!dead(t,r,p))yield {drop:t,r,c};}}
+ }
+ function validCandidate(s,m){const n=raw(s,m);if(check(n,s.turn))return false;
+ // A pawn drop checks only at the adjacent square. Escapes cannot be drops:
+ // there is no intervening square, and a drop cannot capture the pawn.
+ if(m.drop==='P'&&n.b[m.r+(s.turn===1?-1:1)]?.[m.c]?.t==='K'&&check(n,n.turn)){
+ let escape=false;for(const reply of candidates(n)){if(reply.drop)continue;if(!check(raw(n,reply),n.turn)){escape=true;break;}}if(!escape)return false;}
+ return true;}
+ function moves(s){if(s.over)return [];return [...candidates(s)].filter(m=>validCandidate(s,m));}
+ function same(a,b){return ['fr','fc','r','c','drop'].every(k=>a[k]===b[k])&&!!a.promote===!!b.promote;}
+ function play(s,m){if(!m||!Number.isInteger(m.r)||!Number.isInteger(m.c))return null;let chosen;for(const x of candidates(s)){if(same(x,m)){chosen=x;break;}}if(s.over||!chosen||!validCandidate(s,chosen))return null;
+ const n=raw(s,chosen),checked=check(n,n.turn);n.history=[...s.history,{key:key(n),mover:s.turn,check:checked}];
+ let any=false;for(const x of candidates(n))if(validCandidate(n,x)){any=true;break;}
+ if(!any){n.over=true;n.result=checked?`${s.turn===1?'先手':'後手'}の勝ち（詰み）`:'引き分け（合法手なし）';}
+ const hits=[];n.history.forEach((h,i)=>{if(h.key===key(n))hits.push(i);});
+ if(!n.over&&hits.length>=4){const segment=n.history.slice(hits[hits.length-4]+1);const offender=[1,2].find(p=>segment.some(h=>h.mover===p)&&segment.filter(h=>h.mover===p).every(h=>h.check));n.over=true;n.result=offender?`${offender===1?'後手':'先手'}の勝ち（連続王手の千日手）`:'引き分け（千日手）';}
+ return n;}
+ const values={P:100,L:280,N:300,S:400,G:500,B:750,R:900,K:20000,'+P':520,'+L':520,'+N':520,'+S':520,'+B':1000,'+R':1150};
+ function evaluate(s,p){let v=0;for(let r=0;r<9;r++)for(const q of s.b[r])if(q)v+=(q.p===p?1:-1)*values[q.t];for(const x of [1,2])for(const t of types)v+=(x===p?1:-1)*s.h[x][t]*values[t]*1.05;return v;}
+ function cpu(s){const p=s.turn,ms=moves(s);let best=null,score=-Infinity;
+ // One ply with opponent's best material reply; intentionally a practice CPU.
+ const ranked=ms.map(m=>{let n=raw(s,m);return {m,n,v:evaluate(n,p)+(check(n,3-p)?35:0)};}).sort((a,b)=>b.v-a.v).slice(0,24);
+ for(const x of ranked){const replies=moves(x.n);let v=x.v;if(!replies.length&&check(x.n,3-p))v=1e8;else if(replies.length)v=Math.min(...replies.map(m=>evaluate(raw(x.n,m),p)))+(check(x.n,3-p)?20:0);if(v>score){score=v;best=x.m;}}return best;}
+ return {initial,clone,key,targets,check,moves,play,cpu,names,types,raw};
+})();
+if(typeof module!=='undefined')module.exports=Shogi;
+
+
+const Sync=(()=>{
+ const participant=(g,a)=>g?([1,2].find(p=>g.players[p]?.addr===a)||0):0;
+ function reduce(events){let g=null;const sorted=[...events].sort((a,b)=>a.clock-b.clock||(a.addr<b.addr?-1:a.addr>b.addr?1:0)||(a.eid<b.eid?-1:a.eid>b.eid?1:0));
+ for(const e of sorted){if(!e||e.v!==1||!Number.isSafeInteger(e.clock)||e.clock<1||typeof e.addr!=='string'||!e.addr||typeof e.eid!=='string'||!e.eid||typeof e.id!=='string'||!e.id)continue;
+ const user={addr:e.addr,name:typeof e.name==='string'?e.name.slice(0,40):e.addr.slice(0,20)};
+ if(e.type==='NEW'&&(e.side===1||e.side===2)){
+ if(g?.status==='playing')continue;
+ if(g?.status==='waiting'){if(participant(g,e.addr))continue;g.players[3-g.hostSide]=user;g.status='playing';continue;}
+ g={id:e.id,hostSide:e.side,players:[null,null,null],status:'waiting',st:Shogi.initial(),offers:[]};g.players[e.side]=user;continue;}
+ if(!g)continue;
+ if(e.type==='REMATCH'){if(e.previous!==g.id||g.status!=='over'||!participant(g,e.addr)||!g.players[1]||!g.players[2])continue;g={id:e.id,hostSide:3-g.hostSide,players:[null,g.players[2],g.players[1]],status:'playing',st:Shogi.initial(),offers:[]};continue;}
+ if(e.id!==g.id)continue;const me=participant(g,e.addr);
+ if(e.type==='JOIN'&&g.status==='waiting'&&!me){g.players[3-g.hostSide]=user;g.status='playing';}
+ else if(e.type==='CANCEL'&&g.status==='waiting'&&me===g.hostSide)g=null;
+ else if(e.type==='MOVE'&&g.status==='playing'&&me===g.st.turn&&e.before===Shogi.key(g.st)&&e.ply===g.st.ply){const n=Shogi.play(g.st,e.move);if(n){g.st=n;g.offers=[];if(n.over)g.status='over';}}
+ else if(e.type==='RESIGN'&&g.status==='playing'&&me&&e.ply===g.st.ply){g.status='over';g.st.over=true;g.st.result=`${me===1?'後手':'先手'}の勝ち（投了）`;}
+ else if(e.type==='DRAW'&&g.status==='playing'&&me&&e.before===Shogi.key(g.st)&&e.ply===g.st.ply){if(!g.offers.includes(me))g.offers.push(me);if(g.offers.length===2){g.status='over';g.st.over=true;g.st.result='引き分け（双方の合意）';}}
+ }return g;}
+ return {reduce,participant};
+})();
+if(typeof module!=='undefined')module.exports=Sync;
+
+const $=id=>document.getElementById(id),mock=!window.webxdc;
+if(mock){let cb;window.webxdc={selfAddr:'browser-test',selfName:'テスト',sendUpdate:u=>setTimeout(()=>cb?.(u),30),setUpdateListener:f=>{cb=f;return Promise.resolve();}};$('notice').textContent='説明用のテスト表示：他の端末とは通信できません。オンライン対戦はDelta Chat内で開いてください。';}
+const addr=webxdc.selfAddr,name=webxdc.selfName||'プレイヤー';let view='menu',mySide=1,local=Shogi.initial(),online=null,events=new Map(),clock=0,selected=null,legal=[],pending=null,received=0,lastRx='',ready=false,cpuTimer=null,armed=false,armTimer=null,logs=[],promoChoices=[];
+const label=p=>p===1?'先手':'後手',id=()=>Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,12);
+function state(){return view==='cpu'?local:online?.st||Shogi.initial();}function me(){return view==='cpu'?mySide:Sync.participant(online,addr);}function active(){return ready&&!pending&&!state().over&&(view==='cpu'||online?.status==='playing')&&state().turn===me();}
+function clearSelection(){selected=null;legal=[];promoChoices=[];if($('promotion').open)$('promotion').close();}
+function button(text,fn,cls=''){const b=document.createElement('button');b.textContent=text;b.className=cls;b.onclick=fn;$('actions').append(b);return b;}
+function send(type,extra={}){if(!ready||pending)return;const e={v:1,eid:id(),clock:clock+1,addr,name,type,id:online?.id||id(),...extra};pending=e.eid;clearSelection();render();try{webxdc.sendUpdate({payload:e,summary:`将棋：${type==='NEW'?'対戦相手を募集中':type==='RESIGN'?'投了':type==='MOVE'?`${online.st.ply+1}手目`:type==='REMATCH'?'先後交代で再戦':type==='DRAW'?'引き分けを提案':'対局を更新'}`},'将棋の対局更新');}catch(err){pending=null;$('notice').textContent='送信できませんでした。接続を確認してもう一度操作してください。';render();}}
+function host(side){send('NEW',{id:id(),side});}function move(m){if(!active())return;const s=state(),n=Shogi.play(s,m);if(!n)return;clearSelection();if(view==='cpu'){logs.push(notation(s,m));local=n;render();schedule();}else send('MOVE',{move:m,before:Shogi.key(s),ply:s.ply});}
+function notation(s,m){return `${s.ply+1}手 ${label(s.turn)} ${9-m.c}${'一二三四五六七八九'[m.r]} ${Shogi.names[m.drop||s.b[m.fr][m.fc].t]}${m.drop?'打':m.promote?'成':''}`;}
+function clickSquare(r,c){if(!active())return;const choices=legal.filter(m=>m.r===r&&m.c===c);if(choices.length){if(choices.length===2){promoChoices=choices;$('promotion').showModal();}else move(choices[0]);return;}
+ const q=state().b[r][c];if(q?.p===me()){if(selected?.r===r&&selected?.c===c){clearSelection();}else{selected={r,c};legal=Shogi.moves(state()).filter(m=>!m.drop&&m.fr===r&&m.fc===c);}render();}}
+function hand(container,p,s){const el=$(container);el.textContent='';for(const t of Shogi.types)if(s.h[p][t]){const b=document.createElement('button');b.textContent=Shogi.names[t]+' ×'+s.h[p][t];b.disabled=!active()||p!==me();b.className=selected?.drop===t&&p===me()?'sel':'';b.setAttribute('aria-label',`${label(p)}の持ち駒 ${Shogi.names[t]} ${s.h[p][t]}枚`);b.onclick=()=>{if(selected?.drop===t)clearSelection();else{selected={drop:t};legal=Shogi.moves(s).filter(m=>m.drop===t);}render();};el.append(b);}if(!el.children.length)el.textContent='持ち駒なし';}
+function render(){const playing=view!=='menu';$('menu').hidden=playing;$('game').hidden=!playing;$('back').hidden=!playing;$('mode').textContent=view==='cpu'?'CPU対戦':view==='online'?'オンライン':'';if(!playing)return;
+ const s=state(),mine=me(),flip=mine===2,bottom=flip?2:1,top=3-bottom;
+ const playerName=p=>view==='cpu'?(p===mySide?'あなた':'CPU'):(online?.players[p]?.name||'募集中');
+ $('topLabel').textContent=`${label(top)} ${playerName(top)}`;$('bottomLabel').textContent=`${label(bottom)} ${playerName(bottom)}${mine===bottom?'（あなた）':''}`;
+ hand('topHand',top,s);hand('bottomHand',bottom,s);$('coords').textContent='';for(let c=0;c<9;c++){const a=document.createElement('span');a.textContent=flip?c+1:9-c;$('coords').append(a);}
+ $('board').textContent='';for(let y=0;y<9;y++)for(let x=0;x<9;x++){const r=flip?8-y:y,c=flip?8-x:x,q=s.b[r][c],b=document.createElement('button');b.className='cell';if(s.last?.r===r&&s.last?.c===c)b.classList.add('last');if(selected?.r===r&&selected?.c===c)b.classList.add('sel');if(legal.some(m=>m.r===r&&m.c===c))b.classList.add('dest');b.setAttribute('aria-label',`${9-c}${'一二三四五六七八九'[r]} ${q?label(q.p)+Shogi.names[q.t]:'空き'}`);if(q){const a=document.createElement('span');a.className='piece'+(q.p===top?' enemy':'')+(q.t.startsWith('+')?' promoted':'')+(Shogi.names[q.t].length>1?' small':'');a.textContent=Shogi.names[q.t];b.append(a);}b.onclick=()=>clickSquare(r,c);$('board').append(b);}
+ let text=s.over?s.result:`${label(s.turn)}の番です${mine===s.turn?'（あなた）':mine?'（相手）':'（観戦中）'}${Shogi.check(s,s.turn)?' ／ 王手！ 玉を守ってください':''}`;
+ if(view==='online'&&!online)text='対戦相手を募集しましょう';if(online?.status==='waiting'&&view==='online')text=mine?'相手の参加を待っています':`${playerName(online.hostSide)} さんが募集中`;
+ if(pending)text+=' ／ 送信した更新の受信待ち';if(!ready)text='履歴を復元しています';$('status').textContent=text;
+ $('hint').textContent=selected?`${selected.drop?Shogi.names[selected.drop]+'を打つ場所':Shogi.names[s.b[selected.r][selected.c].t]+'の移動先'}を選んでください。緑の印が合法手です。${legal.length?'':'この駒は今は動かせません。'}`:'自分の駒を選ぶ → 緑の印のマスを押す。持ち駒も選べます。';
+ $('actions').textContent='';if(view==='cpu'){if(s.over)button('もう一度（先後を交代）',()=>startCpu(3-mySide),'primary');else{button(armed?'本当に投了する？':'投了',resign);button('引き分けにする',()=>{local.over=true;local.result='引き分け（練習を終了）';clearSelection();render();});}button('最初から',()=>startCpu(mySide));}
+ else if(!online){button('先手で募集',()=>host(1),'primary');button('後手で募集',()=>host(2));}
+ else if(online.status==='waiting'){if(mine)button('募集をやめる',()=>send('CANCEL'));else button('参加する',()=>send('JOIN'),'primary');}
+ else if(online.status==='over'){if(mine)button('もう一度（先後を交代）',()=>send('REMATCH',{id:id(),previous:online.id}),'primary');button('先手で新しく募集',()=>host(1));button('後手で新しく募集',()=>host(2));}
+ else if(mine){button(armed?'本当に投了する？':'投了',resign);button(online.offers.includes(mine)?'引き分け提案済み':online.offers.length?'引き分けに同意':'引き分けを提案',()=>send('DRAW',{before:Shogi.key(s),ply:s.ply}));}
+ for(const b of $('actions').children)b.disabled=!!pending||!ready;
+ $('rx').textContent=view==='online'?`通信：受信 ${received} 件 ／ 最後の受信 ${lastRx||'まだありません'}\n${pending?'更新が反映されるまでお待ちください。長く続くときはアプリを開き直してください。':'同じチャットの同じアプリ投稿を双方が開いてください。'}\nv1.0.0`:'CPU戦の途中経過は保存されません。';
+ $('log').textContent=view==='cpu'?logs.join('\n'):`${s.ply}手まで。最後の手：${s.last?`${9-s.last.c}${'一二三四五六七八九'[s.last.r]}${s.last.drop?Shogi.names[s.last.drop]+'打':s.last.promote?'成':''}`:'なし'}（オンラインは局面履歴を内部で復元）`;}
+function resign(){if(!armed){armed=true;render();clearTimeout(armTimer);armTimer=setTimeout(()=>{armed=false;render();},3000);return;}armed=false;clearTimeout(armTimer);if(view==='cpu'){local.over=true;local.result='CPUの勝ち（投了）';clearSelection();render();}else send('RESIGN',{ply:state().ply});}
+function schedule(){clearTimeout(cpuTimer);if(view==='cpu'&&!local.over&&local.turn!==mySide)cpuTimer=setTimeout(()=>{const m=Shogi.cpu(local);if(m){logs.push(notation(local,m));local=Shogi.play(local,m);}clearSelection();render();},250);}
+function startCpu(side){clearTimeout(cpuTimer);mySide=side;view='cpu';local=Shogi.initial();logs=[];armed=false;clearSelection();render();schedule();}
+$('cpu1').onclick=()=>startCpu(1);$('cpu2').onclick=()=>startCpu(2);$('online').onclick=()=>{view='online';armed=false;clearSelection();render();};$('back').onclick=()=>{clearTimeout(cpuTimer);view='menu';clearSelection();render();};$('yes').onclick=()=>{const m=promoChoices.find(m=>m.promote);move(m);};$('no').onclick=()=>{const m=promoChoices.find(m=>!m.promote);move(m);};$('cancelPromotion').onclick=()=>{clearSelection();render();};$('promotion').addEventListener('cancel',()=>{clearSelection();render();});
+Promise.resolve(webxdc.setUpdateListener(u=>{received++;lastRx=new Date().toLocaleTimeString('ja-JP');const e=u.payload;if(!e||e.v!==1||!Number.isSafeInteger(e.clock)||typeof e.eid!=='string'||typeof e.addr!=='string')return;if(!events.has(e.eid)){events.set(e.eid,e);clock=Math.max(clock,e.clock);online=Sync.reduce(events.values());clearSelection();}if(pending===e.eid)pending=null;render();},0)).then(()=>{ready=true;render();}).catch(()=>{$('notice').textContent='履歴を読み込めません。アプリを開き直してください。';});render();
+</script></body></html>
